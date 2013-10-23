@@ -63,120 +63,98 @@
   }
 
 
-  function _normalize(url) {
-    var urlObj = {}, m;
-    if (typeof url === 'string') {
-      if (m = url.match(/^h?ttp\:\/\/([^\/]+)(\/.*)/)) {
-        urlObj.host = m[1];
-        urlObj.path = m[2];
-      }
-    } else {
-      urlObj.host = url.host || url.hostname;
-      urlObj.path = url.path || url.pathname;
+  function _str2url(str) {
+    var url = null, m;
+    if (m = str.match(/^h?ttp\:\/\/([^\/]+)(\/.*)/)) {
+      url = { host: m[1], path: m[2] };
     }
-    return urlObj;
+    return url;
   }
 
 
-  // in: url string or url object
-  // out: addr object
-  function parse(url) {
-    var addr = null, m;
-
-    url = _normalize(url);
-
-    if (!url.host || !url.path) {
-      return null;
-    }
-
-    if (url.host === 'bg.2ch.net') {
+  function _url2bbs(url) {
+    var bbs = null, m;
+    if (url.host === 'bg20.2ch.net') {
       if (m = url.path.match(/^\/test\/r\.so\/([^\/]+)\/([^\/]+)\/(\d+)/)) {
-        // http://bg.2ch.net/test/r.so/<host>/<board>/<thread>/
-        addr = { host: m[1], board: m[2], thread: +m[3] };
+        // http://bg20.2ch.net/test/r.so/<host>/<board>/<thread>/
+        bbs = { host: m[1], board: m[2], thread: +m[3] };
       } else if (m = url.path.match(/^\/test\/p\.so\/([^\/]+)\/([^\/]+)/)) {
-        // http://bg.2ch.net/test/p.so/<host>/<board>
-        addr = { host: m[1], board: m[2] };
+        // http://bg20.2ch.net/test/p.so/<host>/<board>
+        bbs = { host: m[1], board: m[2] };
       }
     } else {
       if (m = url.path.match(/^\/test\/read\.cgi\/([^\/]+)\/(\d+)\/?(.*)$/)) {
         // http://<host>/test/read.cgi/<board>/<thread>/<range>
-        addr = { host: url.host, board: m[1], thread: +m[2] };
+        bbs = { host: url.host, board: m[1], thread: +m[2] };
         if (m[3]) {
-          addr.range = m[3];
-          addr.rangeSlices = parseRangeString(m[3]);
+          bbs.range = m[3];
+          bbs.rangeSlices = parseRangeString(m[3]);
         }
       } else if (m = url.path.match(/^\/([^\/]+)\/dat\/(\d+).dat/)) {
         // http://<host>/<board>/dat/<thread>.dat
-        addr = { host: url.host, board: m[1], thread: +m[2] };
+        bbs = { host: url.host, board: m[1], thread: +m[2] };
       } else if (m = url.path.match(/^\/([^\/]+)\/?(subject.txt)?$/)) {
         // http://<host>/<board>/
         // http://<host>/<board>/subject.txt
-        addr = { host: url.host, board: m[1] };
+        bbs = { host: url.host, board: m[1] };
       }
     }
-
-    return addr;
+    return bbs;
   }
 
 
-  // in: addr object
-  // out: url object
-  function convert(addr, type) {
+  function _bbs2url(bbs, type) {
     var url = null;
 
-    if (typeof addr === 'string') {
-      addr = parse(addr);
-    }
-
-    if (!addr.host || !addr.board) {
+    if (!bbs.host || !bbs.board) {
       return null;
     }
 
     switch (type) {
     case 'board':
       url = {
-        host: addr.host,
-        path: '/' + addr.board + '/'
+        host: bbs.host,
+        path: '/' + bbs.board + '/'
       };
       break;
     case 'subject':
       url = {
-        host: addr.host,
-        path: '/' + addr.board + '/subject.txt'
+        host: bbs.host,
+        path: '/' + bbs.board + '/subject.txt'
       };
       break;
     case 'subject:bg':
       url = {
         host: 'bg20.2ch.net',
-        path: '/test/p.so/' + addr.host + '/' + addr.board + '/'
+        path: '/test/p.so/' + bbs.host + '/' + bbs.board + '/'
       };
       break;
     case 'thread':
-      if (addr.thread) {
+      if (bbs.thread) {
         url = {
-          host: addr.host,
-          path: '/test/read.cgi/' + addr.board + '/' + addr.thread + '/' + (addr.range || '')
+          host: bbs.host,
+          path: '/test/read.cgi/' + bbs.board + '/' + bbs.thread + '/' + (bbs.range || '')
         };
       }
       break;
     case 'dat':
-      if (addr.thread) {
+      if (bbs.thread) {
         url = {
-          host: addr.host,
-          path: '/' + addr.board + '/dat/' + addr.thread + '.dat'
+          host: bbs.host,
+          path: '/' + bbs.board + '/dat/' + bbs.thread + '.dat'
         };
       }
       break;
     case 'dat:bg':
-      if (addr.thread) {
+      if (bbs.thread) {
         url = {
           host: 'bg20.2ch.net',
-          path: '/test/r.so/' + addr.host + '/' + addr.board + '/' + addr.thread + '/'
+          path: '/test/r.so/' + bbs.host + '/' + bbs.board + '/' + bbs.thread + '/'
         };
       }
       break;
     default:
-      url = convert(addr, addr.thread ? 'dat' : 'subject');
+      url = _bbs2url(bbs, bbs.thread ? 'dat' : 'subject');
       break;
     }
 
@@ -184,9 +162,25 @@
   }
 
 
-  function format(addr, type) {
-    var url = convert(addr, type);
-    return url ? 'http://' + url.host + url.path : '';
+  function parse(url, type) {
+    var bbs, m;
+
+    if (typeof url === 'string' && !(url = _str2url(url))) {
+      return null;
+    }
+
+    if (!(bbs = url.bbs || _url2bbs(url))) {
+      return null;
+    }
+
+    if (type && !(url = _bbs2url(bbs, type))) {
+      return null;
+    }
+
+    url.bbs = bbs;
+    url.href = 'http://' + url.host + url.path;
+
+    return url;
   }
 
 
@@ -194,9 +188,7 @@
 
   global.bbs2ch.url = {
     parseRangeString: parseRangeString,
-    parse: parse,
-    convert: convert,
-    format: format
+    parse: parse
   }
 
   if (typeof module !== 'undefined') {
