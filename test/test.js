@@ -34,18 +34,20 @@ function test_parse_range() {
 }
 
 function test_parse() {
+  eq(b2url.parse('http://bg20.2ch.net/test/p.so/toro.2ch.net/tech/'),
+     { type: 'bg', host: 'toro.2ch.net', board: 'tech' });
   eq(b2url.parse('http://toro.2ch.net/tech/'),
      { type: 'html', host: 'toro.2ch.net', board: 'tech' });
   eq(b2url.parse('http://toro.2ch.net/tech/subject.txt'),
      { type: 'raw', host: 'toro.2ch.net', board: 'tech' });
-  eq(b2url.parse('http://bg20.2ch.net/test/p.so/toro.2ch.net/tech/'),
-     { type: 'bg', host: 'toro.2ch.net', board: 'tech' });
+
+  eq(b2url.parse('http://bg20.2ch.net/test/r.so/toro.2ch.net/tech/1358937029/'),
+     { type: 'bg', host: 'toro.2ch.net', board: 'tech', thread: 1358937029 });
   eq(b2url.parse('http://toro.2ch.net/test/read.cgi/tech/1358937029/'),
      { type: 'html', host: 'toro.2ch.net', board: 'tech', thread: 1358937029 });
   eq(b2url.parse('http://toro.2ch.net/tech/dat/1358937029.dat'),
      { type: 'raw', host: 'toro.2ch.net', board: 'tech', thread: 1358937029 });
-  eq(b2url.parse('http://bg20.2ch.net/test/r.so/toro.2ch.net/tech/1358937029/'),
-     { type: 'bg', host: 'toro.2ch.net', board: 'tech', thread: 1358937029 });
+
   eq(b2url.parse({ host:'toro.2ch.net', path: '/tech/' }),
      { type: 'html', host: 'toro.2ch.net', board: 'tech' });
 
@@ -55,29 +57,24 @@ function test_parse() {
 }
 
 function test_format() {
-  var bbs = { host: 'toro.2ch.net', board: 'tech', thread: 1358937029, range:'50-60' };
-  eq(b2url.format({ host: 'toro.2ch.net', board: 'tech', type: 'bg' }, true),
-     { host: 'bg20.2ch.net', path: '/test/p.so/toro.2ch.net/tech/',
-       href: 'http://bg20.2ch.net/test/p.so/toro.2ch.net/tech/' });
-  eq(b2url.format({ host: 'toro.2ch.net', board: 'tech', type: 'html' }, true),
-     { host: 'toro.2ch.net', path: '/tech/', href:
-       'http://toro.2ch.net/tech/' });
-  eq(b2url.format({ host: 'toro.2ch.net', board: 'tech', type: 'raw' }, true),
-     { host: 'toro.2ch.net', path: '/tech/subject.txt',
-       href: 'http://toro.2ch.net/tech/subject.txt' });
-  eq(b2url.format({ host: 'toro.2ch.net', board: 'tech' }, true),
-     { host: 'toro.2ch.net', path: '/tech/subject.txt',
-       href: 'http://toro.2ch.net/tech/subject.txt' });
+  eq(b2url.format({ host: 'toro.2ch.net', board: 'tech', type: 'bg' }),
+     'http://bg20.2ch.net/test/p.so/toro.2ch.net/tech/');
+  eq(b2url.format({ host: 'toro.2ch.net', board: 'tech', type: 'html' }),
+     'http://toro.2ch.net/tech/');
+  eq(b2url.format({ host: 'toro.2ch.net', board: 'tech', type: 'raw' }),
+     'http://toro.2ch.net/tech/subject.txt');
+  eq(b2url.format({ host: 'toro.2ch.net', board: 'tech' }),
+     'http://toro.2ch.net/tech/subject.txt');
 
-  eq(b2url.format({ host: 'toro.2ch.net', board: 'tech', thread: 1358937029, type: 'bg' }, true),
-     { host: 'bg20.2ch.net', path: '/test/r.so/toro.2ch.net/tech/1358937029/',
-       href: 'http://bg20.2ch.net/test/r.so/toro.2ch.net/tech/1358937029/' });
-  eq(b2url.format({ host: 'toro.2ch.net', board: 'tech', thread: 1358937029, range:'50-60', type: 'html' }, true),
-     { host: 'toro.2ch.net', path: '/test/read.cgi/tech/1358937029/50-60',
-       href: 'http://toro.2ch.net/test/read.cgi/tech/1358937029/50-60' });
-  eq(b2url.format({ host: 'toro.2ch.net', board: 'tech', thread: 1358937029, type: 'raw' }, true),
-     { host: 'toro.2ch.net', path: '/tech/dat/1358937029.dat',
-       href: 'http://toro.2ch.net/tech/dat/1358937029.dat' });
+  eq(b2url.format({ host: 'toro.2ch.net', board: 'tech', thread: 1358937029, type: 'bg' }),
+     'http://bg20.2ch.net/test/r.so/toro.2ch.net/tech/1358937029/');
+  eq(b2url.format({ host: 'toro.2ch.net', board: 'tech', thread: 1358937029, range:'50-60', type: 'html' }),
+     'http://toro.2ch.net/test/read.cgi/tech/1358937029/50-60');
+  eq(b2url.format({ host: 'toro.2ch.net', board: 'tech', thread: 1358937029, type: 'raw' }),
+     'http://toro.2ch.net/tech/dat/1358937029.dat');
+  eq(b2url.format({ host: 'toro.2ch.net', board: 'tech', thread: 1358937029 }),
+     'http://toro.2ch.net/tech/dat/1358937029.dat');
+
   eq(b2url.format({ host: 'toro.2ch.net', board: 'tech', thread: 1358937029 }, true),
      { host: 'toro.2ch.net', path: '/tech/dat/1358937029.dat',
        href: 'http://toro.2ch.net/tech/dat/1358937029.dat' });
