@@ -1,6 +1,6 @@
 {
   "name": "bbs-2ch-url",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "main": "./bbs-2ch-url.js",
   "scripts": {
     "test": "node test/test.js"

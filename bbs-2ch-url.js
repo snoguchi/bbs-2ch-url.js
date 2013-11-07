@@ -83,27 +83,27 @@
 
     if (url.host === 'bg20.2ch.net') {
       if (m = url.path.match(/^\/test\/r\.so\/([^\/]+)\/([^\/]+)\/(\d+)/)) {
-        // http://bg20.2ch.net/test/r.so/<host>/<board>/<thread>/
-        obj = { type: 'bg', host: m[1], board: m[2], thread: +m[3] };
+        // http://bg20.2ch.net/test/r.so/<host>/<bbs>/<key>/
+        obj = { type: 'bg', host: m[1], bbs: m[2], key: +m[3] };
       } else if (m = url.path.match(/^\/test\/p\.so\/([^\/]+)\/([^\/]+)/)) {
-        // http://bg20.2ch.net/test/p.so/<host>/<board>
-        obj = { type: 'bg', host: m[1], board: m[2] };
+        // http://bg20.2ch.net/test/p.so/<host>/<bbs>
+        obj = { type: 'bg', host: m[1], bbs: m[2] };
       }
     } else {
       if (m = url.path.match(/^\/test\/read\.cgi\/([^\/]+)\/(\d+)\/?(.*)$/)) {
-        // http://<host>/test/read.cgi/<board>/<thread>/<range>
-        obj = { type: 'html', host: url.host, board: m[1], thread: +m[2] };
+        // http://<host>/test/read.cgi/<bbs>/<key>/<range>
+        obj = { type: 'html', host: url.host, bbs: m[1], key: +m[2] };
         if (m[3]) {
           obj.range = m[3];
           obj.rangeSlices = parseRangeString(m[3]);
         }
       } else if (m = url.path.match(/^\/([^\/]+)\/dat\/(\d+).dat/)) {
-        // http://<host>/<board>/dat/<thread>.dat
-        obj = { type: 'raw', host: url.host, board: m[1], thread: +m[2] };
+        // http://<host>/<bbs>/dat/<key>.dat
+        obj = { type: 'raw', host: url.host, bbs: m[1], key: +m[2] };
       } else if (m = url.path.match(/^\/([^\/]+)\/?(subject.txt)?$/)) {
-        // http://<host>/<board>/
-        // http://<host>/<board>/subject.txt
-        obj = { type: m[2] ? 'raw' : 'html', host: url.host, board: m[1] };
+        // http://<host>/<bbs>/
+        // http://<host>/<bbs>/subject.txt
+        obj = { type: m[2] ? 'raw' : 'html', host: url.host, bbs: m[1] };
       }
     }
 
@@ -114,7 +114,7 @@
   function format(obj, asObject) {
     var url;
 
-    if (!obj || !obj.host || !obj.board) {
+    if (!obj || !obj.host || !obj.bbs) {
       return null;
     }
 
@@ -122,26 +122,26 @@
     case 'bg':
       url = {
         host: 'bg20.2ch.net',
-        path: obj.thread
-          ? '/test/r.so/' + obj.host + '/' + obj.board + '/' + obj.thread + '/'
-          : '/test/p.so/' + obj.host + '/' + obj.board + '/'
+        path: obj.key
+          ? '/test/r.so/' + obj.host + '/' + obj.bbs + '/' + obj.key + '/'
+          : '/test/p.so/' + obj.host + '/' + obj.bbs + '/'
       };
       break;
     case 'html':
       url = {
         host: obj.host,
-        path: obj.thread
-          ? '/test/read.cgi/' + obj.board + '/' + obj.thread + '/' + (obj.range || '')
-          : '/' + obj.board + '/'
+        path: obj.key
+          ? '/test/read.cgi/' + obj.bbs + '/' + obj.key + '/' + (obj.range || '')
+          : '/' + obj.bbs + '/'
       };
       break;
     case 'raw':
     case undefined:
       url = {
         host: obj.host,
-        path: obj.thread
-          ? '/' + obj.board + '/dat/' + obj.thread + '.dat'
-          : '/' + obj.board + '/subject.txt'
+        path: obj.key
+          ? '/' + obj.bbs + '/dat/' + obj.key + '.dat'
+          : '/' + obj.bbs + '/subject.txt'
       };
       break;
     default:
