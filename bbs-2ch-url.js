@@ -81,13 +81,13 @@
       }
     }
 
-    if (url.host === 'bg20.2ch.net') {
+    if (url.host === 'bg20.2ch.net' || url.host === 'bg30.2ch.net') {
       if (m = url.path.match(/^\/test\/r\.so\/([^\/]+)\/([^\/]+)\/(\d+)/)) {
-        // http://bg20.2ch.net/test/r.so/<host>/<bbs>/<key>/
-        obj = { type: 'bg', host: m[1], bbs: m[2], key: +m[3] };
+        // http://bg*0.2ch.net/test/r.so/<host>/<bbs>/<key>/
+        obj = { type: 'raw', cache: url.host, host: m[1], bbs: m[2], key: +m[3] };
       } else if (m = url.path.match(/^\/test\/p\.so\/([^\/]+)\/([^\/]+)/)) {
-        // http://bg20.2ch.net/test/p.so/<host>/<bbs>
-        obj = { type: 'bg', host: m[1], bbs: m[2] };
+        // http://bg*0.2ch.net/test/p.so/<host>/<bbs>
+        obj = { type: 'raw', cache: url.host, host: m[1], bbs: m[2] };
       }
     } else {
       if (m = url.path.match(/^\/test\/read\.cgi\/([^\/]+)\/(\d+)\/?(.*)$/)) {
@@ -118,33 +118,30 @@
       return null;
     }
 
-    switch (obj.type) {
-    case 'bg':
-      url = {
-        host: 'bg20.2ch.net',
-        path: obj.key
-          ? '/test/r.so/' + obj.host + '/' + obj.bbs + '/' + obj.key + '/'
-          : '/test/p.so/' + obj.host + '/' + obj.bbs + '/'
-      };
-      break;
-    case 'html':
+    if (obj.type === 'html') {
       url = {
         host: obj.host,
         path: obj.key
           ? '/test/read.cgi/' + obj.bbs + '/' + obj.key + '/' + (obj.range || '')
           : '/' + obj.bbs + '/'
       };
-      break;
-    case 'raw':
-    case undefined:
-      url = {
-        host: obj.host,
-        path: obj.key
-          ? '/' + obj.bbs + '/dat/' + obj.key + '.dat'
-          : '/' + obj.bbs + '/subject.txt'
-      };
-      break;
-    default:
+    } else if (obj.type === 'raw' || typeof obj.type === 'undefined') {
+      if (obj.cache) {
+        url = {
+          host: obj.cache,
+          path: obj.key
+            ? '/test/r.so/' + obj.host + '/' + obj.bbs + '/' + obj.key + '/'
+            : '/test/p.so/' + obj.host + '/' + obj.bbs + '/'
+        };
+      } else {
+        url = {
+          host: obj.host,
+          path: obj.key
+            ? '/' + obj.bbs + '/dat/' + obj.key + '.dat'
+            : '/' + obj.bbs + '/subject.txt'
+        };
+      }
+    } else {
       return null;
     }
 
